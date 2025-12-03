@@ -2,7 +2,7 @@
   "dxt_version": "0.1",
   "name": "redmine-mcp-server",
   "display_name": "Redmine MCP Server",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Model Context Protocol server for comprehensive Redmine project management integration",
   "long_description": "# Redmine MCP Server\n\nA comprehensive Model Context Protocol (MCP) server that enables AI assistants to interact with Redmine project management systems. Provides access to issues, projects, time tracking, users, wiki pages, and more.\n\n## Features\n\n- **Issue Management**: Create, read, update, and delete issues\n- **Project Management**: Access project details and versions\n- **Time Tracking**: Log and manage time entries\n- **User Management**: Access user information and memberships\n- **Wiki Management**: Create and manage wiki pages\n- **Utilities**: Search, custom requests, and status management\n\n## Requirements\n\n- Redmine instance with REST API enabled\n- Valid API key or username/password credentials\n- HTTPS recommended for production use\n\n## Security\n\n- API keys are stored securely in extension configuration\n- All communication uses HTTPS when properly configured\n- Input validation and sanitization on all requests",
   "author": {

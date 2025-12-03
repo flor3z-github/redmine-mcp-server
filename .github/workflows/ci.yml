@@ -49,9 +49,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -89,29 +86,3 @@ jobs:
       run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      continue-on-error: true
-
-    - name: Create GitHub Release
-      if: steps.version-check.outputs.changed == 'true'
-      run: |
-        gh release create v${{ steps.version-check.outputs.current }} \
-          --title "Release v${{ steps.version-check.outputs.current }}" \
-          --notes "## Changes
-        - Version bump to ${{ steps.version-check.outputs.current }}
-        - All tests passing
-
-        ## Installation
-
-        ### NPM Package
-        \`\`\`bash
-        npm install -g @gmlee-ncurity/mcp-server-redmine@${{ steps.version-check.outputs.current }}
-        \`\`\`
-
-        ### npx (no installation required)
-        \`\`\`bash
-        npx @gmlee-ncurity/mcp-server-redmine@${{ steps.version-check.outputs.current }}
-        \`\`\`
-
-        🤖 Automated release via GitHub Actions"
-      env:
-        GH_TOKEN: ${{ github.token }}

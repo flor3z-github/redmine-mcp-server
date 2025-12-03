@@ -55,13 +55,11 @@ Monitor workflows based on the branch you're working with:
 #### Branch-Specific CI/CD Behavior
 **`develop` branch pushes trigger:**
 - **Test Jobs**: Linting, testing, and building on Node.js 20.x and 22.x
-- **Develop Build Job**: DXT validation and packaging (development build)
 - **No Publishing**: Development builds don't publish to NPM or create releases
 
 **`main` branch pushes (via merged PR) trigger:**
 - **Test Jobs**: Full test suite validation
-- **Publish Job**: NPM publishing, GitHub release creation, DXT asset upload
-- **Release Automation**: Version detection, DXT packaging, and distribution
+- **Publish Job**: NPM publishing and GitHub release creation
 
 **Pull Requests trigger:**
 - **Test Jobs Only**: Validates proposed changes without publishing
@@ -74,17 +72,14 @@ To release changes from `develop` to `main`:
 git checkout develop
 git pull origin develop
 
-# 2. Bump version in package.json and manifest.json
+# 2. Bump version in package.json
 npm version patch  # or minor, major
 
-# 3. Update manifest.json version to match package.json
-# Edit manifest.json manually to match the new version
-
-# 4. Commit version bump
-git add package.json manifest.json
+# 3. Commit version bump
+git add package.json package-lock.json
 git commit -m "Bump version to vX.X.X for release"
 
-# 5. Push and create PR
+# 4. Push and create PR
 git push origin develop
 gh pr create --base main --head develop --title "Release vX.X.X"
 ```

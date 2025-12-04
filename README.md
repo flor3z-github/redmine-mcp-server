@@ -351,7 +351,7 @@ When the PR is merged to `main`, CI/CD automatically publishes to npm registry.
 ### CI/CD Pipeline
 
 GitHub Actions automatically:
-- Runs tests on Node.js 20.x and 22.x
+- Runs tests on Node.js 20.x, 22.x, and 24.x
 - Checks linting and builds
 - Auto-publishes to npm when merged to `main`
 - Uploads test coverage reports

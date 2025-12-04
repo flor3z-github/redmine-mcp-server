@@ -24,7 +24,7 @@ export const createIssueSchema = z.object({
   done_ratio: z.number().min(0).max(100).optional(),
   is_private: z.boolean().optional(),
   watcher_user_ids: z.array(positiveIntegerSchema).optional(),
-  custom_field_values: z.record(z.string()).optional(),
+  custom_field_values: z.record(z.string(), z.string()).optional(),
 });
 
 export const updateIssueSchema = createIssueSchema.partial().extend({
@@ -64,7 +64,7 @@ const baseTimeEntrySchema = z.object({
   activity_id: positiveIntegerSchema,
   comments: z.string().max(1024).optional(),
   user_id: positiveIntegerSchema.optional(),
-  custom_field_values: z.record(z.string()).optional(),
+  custom_field_values: z.record(z.string(), z.string()).optional(),
 });
 
 export const createTimeEntrySchema = baseTimeEntrySchema.refine(
@@ -113,7 +113,7 @@ export function validateInput<T>(
     return schema.parse(input);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+      const messages = error.issues.map(e => `${e.path.join('.')}: ${e.message}`);
       throw new ValidationError(messages.join(', '), fieldName);
     }
     throw error;

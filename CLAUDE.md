@@ -54,7 +54,7 @@ Monitor workflows based on the branch you're working with:
 
 #### Branch-Specific CI/CD Behavior
 **`develop` branch pushes trigger:**
-- **Test Jobs**: Linting, testing, and building on Node.js 20.x and 22.x
+- **Test Jobs**: Linting, testing, and building on Node.js 20.x, 22.x, and 24.x
 - **No Publishing**: Development builds don't publish to NPM or create releases
 
 **`main` branch pushes (via merged PR) trigger:**

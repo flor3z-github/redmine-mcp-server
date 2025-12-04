@@ -1,5 +1,5 @@
 {
-  "name": "@gmlee-ncurity/mcp-server-redmine",
+  "name": "@flor3z-github/mcp-server-redmine",
   "version": "1.0.8",
   "description": "Model Context Protocol server for Redmine integration",
   "main": "dist/index.js",

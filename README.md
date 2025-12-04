@@ -1,9 +1,9 @@
 # Redmine MCP Server
 
-[![npm version](https://img.shields.io/npm/v/@gmlee-ncurity/mcp-server-redmine.svg)](https://www.npmjs.com/package/@gmlee-ncurity/mcp-server-redmine)
+[![npm version](https://img.shields.io/npm/v/@flor3z-github/mcp-server-redmine.svg)](https://www.npmjs.com/package/@flor3z-github/mcp-server-redmine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
-[![CI](https://github.com/gmlee-ncurity/redmine-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/gmlee-ncurity/redmine-mcp-server/actions/workflows/ci.yml)
+[![CI](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml)
 
 A Model Context Protocol (MCP) server that enables AI assistants to interact with Redmine project management systems. This server provides comprehensive access to Redmine's features including issues, projects, time tracking, users, and wiki pages.
 
@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine.com",
         "REDMINE_API_KEY": "your-api-key"
@@ -73,20 +73,20 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
 ### Global Installation (recommended)
 
 ```bash
-npm install -g @gmlee-ncurity/mcp-server-redmine
+npm install -g @flor3z-github/mcp-server-redmine
 ```
 
 ### Direct Usage (no installation required)
 
 ```bash
-npx @gmlee-ncurity/mcp-server-redmine
+npx @flor3z-github/mcp-server-redmine
 ```
 
 ### For local development
 
 ```bash
 # Clone the repository
-git clone https://github.com/gmlee-ncurity/redmine-mcp-server.git
+git clone https://github.com/flor3z-github/redmine-mcp-server.git
 cd redmine-mcp-server
 
 # Install dependencies
@@ -139,7 +139,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -182,7 +182,7 @@ You can use this MCP server with VS Code extensions that support the Model Conte
   "cline.mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -206,7 +206,7 @@ Add to your Zed settings (`~/.config/zed/settings.json`):
     "redmine": {
       "command": {
         "path": "npx",
-        "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+        "args": ["-y", "@flor3z-github/mcp-server-redmine"],
         "env": {
           "REDMINE_URL": "https://your-redmine-instance.com",
           "REDMINE_API_KEY": "your-api-key-here"

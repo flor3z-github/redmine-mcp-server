@@ -41,16 +41,16 @@ This project uses a **Git Flow** branching model with two main branches:
 **Release Workflow (from `develop` to `main`):**
 1. Create Pull Request from `develop` to `main`
 2. Review and merge PR to trigger release
-3. Automated release publishes to NPM and creates GitHub release
+3. Automated release publishes to NPM
 
 ### CI/CD Workflow Monitoring
 Monitor workflows based on the branch you're working with:
 
 #### Commands for Monitoring
-1. **Check workflow status**: `gh run list --repo gmlee-ncurity/redmine-mcp-server --limit 3`
-2. **Watch active workflow**: `gh run watch <run-id> --repo gmlee-ncurity/redmine-mcp-server`
-3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo gmlee-ncurity/redmine-mcp-server`
-4. **Monitor workflow URL**: https://github.com/gmlee-ncurity/redmine-mcp-server/actions
+1. **Check workflow status**: `gh run list --repo flor3z-github/redmine-mcp-server --limit 3`
+2. **Watch active workflow**: `gh run watch <run-id> --repo flor3z-github/redmine-mcp-server`
+3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo flor3z-github/redmine-mcp-server`
+4. **Monitor workflow URL**: https://github.com/flor3z-github/redmine-mcp-server/actions
 
 #### Branch-Specific CI/CD Behavior
 **`develop` branch pushes trigger:**
@@ -59,7 +59,7 @@ Monitor workflows based on the branch you're working with:
 
 **`main` branch pushes (via merged PR) trigger:**
 - **Test Jobs**: Full test suite validation
-- **Publish Job**: NPM publishing and GitHub release creation
+- **Publish Job**: NPM publishing
 
 **Pull Requests trigger:**
 - **Test Jobs Only**: Validates proposed changes without publishing

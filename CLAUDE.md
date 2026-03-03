@@ -41,27 +41,25 @@ This project uses a **Git Flow** branching model with two main branches:
 **Release Workflow (from `develop` to `main`):**
 1. Create Pull Request from `develop` to `main`
 2. Review and merge PR to trigger release
-3. Automated release publishes to NPM and creates GitHub release
+3. Automated release publishes to NPM
 
 ### CI/CD Workflow Monitoring
 Monitor workflows based on the branch you're working with:
 
 #### Commands for Monitoring
-1. **Check workflow status**: `gh run list --repo gmlee-ncurity/redmine-mcp-server --limit 3`
-2. **Watch active workflow**: `gh run watch <run-id> --repo gmlee-ncurity/redmine-mcp-server`
-3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo gmlee-ncurity/redmine-mcp-server`
-4. **Monitor workflow URL**: https://github.com/gmlee-ncurity/redmine-mcp-server/actions
+1. **Check workflow status**: `gh run list --repo flor3z-github/redmine-mcp-server --limit 3`
+2. **Watch active workflow**: `gh run watch <run-id> --repo flor3z-github/redmine-mcp-server`
+3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo flor3z-github/redmine-mcp-server`
+4. **Monitor workflow URL**: https://github.com/flor3z-github/redmine-mcp-server/actions
 
 #### Branch-Specific CI/CD Behavior
 **`develop` branch pushes trigger:**
-- **Test Jobs**: Linting, testing, and building on Node.js 20.x and 22.x
-- **Develop Build Job**: DXT validation and packaging (development build)
+- **Test Jobs**: Linting, testing, and building on Node.js 20.x, 22.x, and 24.x
 - **No Publishing**: Development builds don't publish to NPM or create releases
 
 **`main` branch pushes (via merged PR) trigger:**
 - **Test Jobs**: Full test suite validation
-- **Publish Job**: NPM publishing, GitHub release creation, DXT asset upload
-- **Release Automation**: Version detection, DXT packaging, and distribution
+- **Publish Job**: NPM publishing
 
 **Pull Requests trigger:**
 - **Test Jobs Only**: Validates proposed changes without publishing
@@ -74,17 +72,14 @@ To release changes from `develop` to `main`:
 git checkout develop
 git pull origin develop
 
-# 2. Bump version in package.json and manifest.json
+# 2. Bump version in package.json
 npm version patch  # or minor, major
 
-# 3. Update manifest.json version to match package.json
-# Edit manifest.json manually to match the new version
-
-# 4. Commit version bump
-git add package.json manifest.json
+# 3. Commit version bump
+git add package.json package-lock.json
 git commit -m "Bump version to vX.X.X for release"
 
-# 5. Push and create PR
+# 4. Push and create PR
 git push origin develop
 gh pr create --base main --head develop --title "Release vX.X.X"
 ```

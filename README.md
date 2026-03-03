@@ -1,6 +1,34 @@
 # Redmine MCP Server
 
+[![npm version](https://img.shields.io/npm/v/@flor3z-github/mcp-server-redmine.svg)](https://www.npmjs.com/package/@flor3z-github/mcp-server-redmine)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![CI](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml)
+
 A Model Context Protocol (MCP) server that enables AI assistants to interact with Redmine project management systems. This server provides comprehensive access to Redmine's features including issues, projects, time tracking, users, and wiki pages.
+
+## Quick Start
+
+```bash
+# 1. Get your Redmine API key from: My account → API access key → Show
+
+# 2. Add to Claude Desktop config (~/.config/Claude/claude_desktop_config.json):
+{
+  "mcpServers": {
+    "redmine": {
+      "command": "npx",
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+      "env": {
+        "REDMINE_URL": "https://your-redmine.com",
+        "REDMINE_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+
+# 3. Restart Claude Desktop and start asking questions like:
+#    "Show me all open issues assigned to me"
+```
 
 ## Features
 
@@ -45,20 +73,20 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
 ### Global Installation (recommended)
 
 ```bash
-npm install -g @gmlee-ncurity/mcp-server-redmine
+npm install -g @flor3z-github/mcp-server-redmine
 ```
 
 ### Direct Usage (no installation required)
 
 ```bash
-npx @gmlee-ncurity/mcp-server-redmine
+npx @flor3z-github/mcp-server-redmine
 ```
 
 ### For local development
 
 ```bash
 # Clone the repository
-git clone https://github.com/gmlee-ncurity/redmine-mcp-server.git
+git clone https://github.com/flor3z-github/redmine-mcp-server.git
 cd redmine-mcp-server
 
 # Install dependencies
@@ -111,7 +139,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -154,7 +182,7 @@ You can use this MCP server with VS Code extensions that support the Model Conte
   "cline.mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -167,6 +195,27 @@ You can use this MCP server with VS Code extensions that support the Model Conte
 ### Using other MCP-compatible extensions
 
 Check the extension's documentation for MCP server configuration. The pattern is typically similar to the above.
+
+## Usage with Zed Editor
+
+Add to your Zed settings (`~/.config/zed/settings.json`):
+
+```json
+{
+  "context_servers": {
+    "redmine": {
+      "command": {
+        "path": "npx",
+        "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+        "env": {
+          "REDMINE_URL": "https://your-redmine-instance.com",
+          "REDMINE_API_KEY": "your-api-key-here"
+        }
+      }
+    }
+  }
+}
+```
 
 ## Available Tools
 
@@ -270,54 +319,41 @@ This will start the MCP Inspector on http://localhost:5173
 - For self-signed certificates, set `REDMINE_SSL_VERIFY=false` (not recommended for production)
 - Provide the CA certificate path via `REDMINE_CA_CERT`
 
-## Desktop Extension (DXT) Support
-
-This MCP server is also packaged as a Desktop Extension (DXT) for seamless integration with supported applications:
-
-```bash
-# Build DXT package
-npm run build:bundle
-```
-
-The bundled version includes all dependencies and is optimized for distribution.
-
 ## Development & Release
 
-### Automated Release Process
+### Branch Strategy
 
-This project includes automated release scripts for easy version management and publishing:
+This project uses Git Flow with two main branches:
+- **`main`** - Production-ready code, triggers releases
+- **`develop`** - Integration branch for features (default branch)
+
+### Release Process
+
+To create a release:
 
 ```bash
-# Release with patch version bump (1.0.1 -> 1.0.2)
-npm run release
+# 1. Ensure you're on develop with latest changes
+git checkout develop
+git pull origin develop
 
-# Release with minor version bump (1.0.1 -> 1.1.0)
-npm run release:minor
+# 2. Bump version in package.json
+npm version patch  # or minor, major
 
-# Release with major version bump (1.0.1 -> 2.0.0)
-npm run release:major
+# 3. Push and create PR to main
+git push origin develop
+gh pr create --base main --head develop --title "Release vX.X.X"
 
-# Or use the script directly with options
-./scripts/release.sh minor --skip-tests
+# 4. Merge PR to trigger automated release
 ```
 
-The automated release process:
-1. 🔄 Bumps the version in package.json
-2. ✅ Runs all tests with proper environment setup
-3. 🔍 Runs linting checks
-4. 🔨 Builds the project
-5. 📝 Commits changes with standardized message
-6. 🚀 Pushes to repository
-7. 📦 Publishes to npm registry
-8. 🏷️ Creates GitHub release (if `gh` CLI is available)
+When the PR is merged to `main`, CI/CD automatically publishes to npm registry.
 
 ### CI/CD Pipeline
 
 GitHub Actions automatically:
-- Runs tests on Node.js 20.x and 22.x
+- Runs tests on Node.js 20.x, 22.x, and 24.x
 - Checks linting and builds
-- Auto-publishes to npm when version changes
-- Creates GitHub releases
+- Auto-publishes to npm when merged to `main`
 - Uploads test coverage reports
 
 ## Contributing

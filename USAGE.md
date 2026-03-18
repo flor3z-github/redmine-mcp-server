@@ -41,7 +41,7 @@ REDMINE_API_KEY=your-api-key-here
 # MCP_HOST=127.0.0.1           # HTTP bind host (default: 127.0.0.1)
 
 # Optional: OAuth (HTTP transport only)
-# MCP_ISSUER_URL=https://public-url  # OAuth issuer URL (reverse proxy의 외부 HTTPS URL)
+# MCP_ISSUER_URL=https://public-url  # OAuth issuer URL (external HTTPS URL for reverse proxy)
 # MCP_DATA_DIR=/data                 # Directory for persistent OAuth data
 ```
 
@@ -145,13 +145,13 @@ claude mcp add --transport http redmine https://mcp.your-domain.com/mcp
 
 ### Production Deployment (Reverse Proxy)
 
-MCP 서버는 HTTP로 실행하고, nginx 등 reverse proxy에서 HTTPS를 처리하는 구성을 권장합니다.
+Run the MCP server over HTTP and let a reverse proxy (e.g., nginx) handle HTTPS termination.
 
 ```
-[Claude Code] --HTTPS--> [nginx + TLS] --HTTP--> [MCP 서버 :3000]
+[Claude Code] --HTTPS--> [nginx + TLS] --HTTP--> [MCP Server :3000]
 ```
 
-서버에 `MCP_ISSUER_URL`을 설정하여 OAuth issuer를 외부 HTTPS URL로 지정합니다:
+Set `MCP_ISSUER_URL` on the server to point the OAuth issuer to the external HTTPS URL:
 
 ```yaml
 environment:
@@ -172,7 +172,7 @@ services:
       - MCP_HOST=0.0.0.0
       - MCP_PORT=3000
       - MCP_DATA_DIR=/data
-      # - MCP_ISSUER_URL=https://mcp.your-domain.com  # reverse proxy 사용 시
+      # - MCP_ISSUER_URL=https://mcp.your-domain.com  # when using reverse proxy
     volumes:
       - mcp-data:/data
 

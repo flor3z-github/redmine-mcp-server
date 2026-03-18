@@ -1,0 +1,23 @@
+services:
+  redmine-mcp:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - REDMINE_URL=https://space.ncurity.com
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=3000
+      - MCP_DATA_DIR=/data
+      # nginx reverse proxy 사용 시 외부 HTTPS URL 설정
+      # - MCP_ISSUER_URL=https://mcp.ncurity.com
+    volumes:
+      - mcp-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  mcp-data:

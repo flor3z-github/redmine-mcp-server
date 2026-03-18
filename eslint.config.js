@@ -21,6 +21,8 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         Buffer: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
         global: 'readonly',
@@ -44,6 +46,8 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'warn',
       
       // General rules
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error'

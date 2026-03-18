@@ -1,7 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import https from 'https';
 import fs from 'fs';
 import { config } from '../config.js';
+import { sessionStore } from '../context.js';
 import type {
   RedmineUser,
   RedmineProject,
@@ -54,6 +55,23 @@ export class RedmineClient {
     }
 
     this.axios = axios.create(axiosConfig);
+
+    // Add per-session credential override via AsyncLocalStorage
+    this.axios.interceptors.request.use((reqConfig: InternalAxiosRequestConfig) => {
+      const session = sessionStore.getStore();
+      if (session) {
+        if (session.redmineApiKey) {
+          reqConfig.headers['X-Redmine-API-Key'] = session.redmineApiKey;
+        }
+        if (session.redmineUsername && session.redminePassword) {
+          reqConfig.auth = {
+            username: session.redmineUsername,
+            password: session.redminePassword,
+          };
+        }
+      }
+      return reqConfig;
+    });
 
     // Add retry interceptor
     this.setupRetryInterceptor();

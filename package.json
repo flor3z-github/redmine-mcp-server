@@ -1,6 +1,6 @@
 {
   "name": "@flor3z-github/mcp-server-redmine",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Model Context Protocol server for Redmine integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

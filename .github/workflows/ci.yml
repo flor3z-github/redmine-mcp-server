@@ -11,33 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x, 22.x]
-    
+        node-version: [20.x, 22.x, 24.x]
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm install
-    
+
     - name: Run linter
       run: npm run lint
-    
+
     - name: Run tests
       run: npm test
       env:
         REDMINE_URL: https://test.redmine.com
         REDMINE_API_KEY: test-api-key
-    
+
     - name: Run build
       run: npm run build
-    
+
     - name: Upload coverage reports
       if: matrix.node-version == '20.x'
       uses: codecov/codecov-action@v3
@@ -45,85 +45,32 @@ jobs:
         file: ./coverage/lcov.info
         fail_ci_if_error: false
 
-  develop-build:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm install
-    
-    - name: Install DXT CLI
-      run: npm install -g @anthropic-ai/dxt
-    
-    - name: Build project
-      run: npm run build
-    
-    - name: Build DXT bundle
-      run: npm run build:bundle
-    
-    - name: Validate DXT structure
-      run: npm run validate-dxt
-    
-    - name: Package DXT (development)
-      run: dxt pack . redmine-mcp-server-develop.dxt
-    
-    - name: Development build summary
-      run: |
-        echo "🔧 Development build completed successfully!"
-        echo "✅ TypeScript compilation: PASSED"
-        echo "✅ DXT validation: PASSED"
-        echo "✅ DXT packaging: PASSED"
-        echo ""
-        echo "📝 This is a development build - no publishing performed."
-        echo "🚀 To release: merge this branch to main via Pull Request"
-
   publish:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+    permissions:
+      contents: read
+      id-token: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm install
-    
-    - name: Install DXT CLI
-      run: npm install -g @anthropic-ai/dxt
-    
+
     - name: Build project
       run: npm run build
-    
-    - name: Build DXT bundle
-      run: npm run build:bundle
-    
-    - name: Validate DXT structure
-      run: npm run validate-dxt
-    
-    - name: Package DXT
-      run: dxt pack . redmine-mcp-server.dxt
-    
+
     - name: Check if version changed
       id: version-check
       run: |
@@ -136,36 +83,9 @@ jobs:
         else
           echo "changed=false" >> $GITHUB_OUTPUT
         fi
-    
-    - name: Publish to npm
+
+    - name: Publish to npm with provenance
       if: steps.version-check.outputs.changed == 'true'
-      run: npm publish
+      run: npm publish --access public --provenance
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      continue-on-error: true
-    
-    - name: Create GitHub Release with DXT
-      if: steps.version-check.outputs.changed == 'true'
-      run: |
-        # Create release
-        gh release create v${{ steps.version-check.outputs.current }} \
-          --title "Release v${{ steps.version-check.outputs.current }}" \
-          --notes "## Changes
-        - Version bump to ${{ steps.version-check.outputs.current }}
-        - All tests passing
-        - DXT package included for desktop extensions
-
-        ## Installation
-
-        ### NPM Package
-        \`\`\`bash
-        npm install -g @gmlee-ncurity/mcp-server-redmine@${{ steps.version-check.outputs.current }}
-        \`\`\`
-
-        ### Desktop Extension (DXT)
-        Download the \`redmine-mcp-server.dxt\` file from the assets below and install it in your supported desktop application.
-
-        🤖 Automated release via GitHub Actions" \
-          redmine-mcp-server.dxt
-      env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}

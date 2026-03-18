@@ -66,7 +66,34 @@ Monitor workflows based on the branch you're working with:
 **Pull Requests trigger:**
 - **Test Jobs Only**: Validates proposed changes without publishing
 
+#### Versioning Strategy (Beta / Stable)
+
+This fork uses npm dist-tag based versioning to separate beta and stable releases:
+
+- **`develop` branch**: Always uses `-beta.N` suffix (e.g., `1.1.0-beta.0`)
+- **`main` branch**: Stable versions without suffix (e.g., `1.1.0`)
+- **npm dist-tag**: `latest` for stable, `beta` for pre-release
+
+**Version flow example:**
+```
+develop: 1.1.0-beta.0 → 1.1.0-beta.1 → 1.1.0-beta.2
+                                              ↓ (PR merge to main)
+main:                                       1.1.0 (stable release)
+develop: 1.2.0-beta.0  ← next cycle starts
+```
+
+**Bumping beta versions on `develop`:**
+```bash
+npm version prerelease --preid=beta   # 1.1.0-beta.0 → 1.1.0-beta.1
+```
+
+**Publishing beta to npm (from `develop`):**
+```bash
+npm publish --tag beta
+```
+
 #### Creating Release Pull Requests
+
 To release changes from `develop` to `main`:
 
 ```bash
@@ -74,8 +101,8 @@ To release changes from `develop` to `main`:
 git checkout develop
 git pull origin develop
 
-# 2. Bump version in package.json and manifest.json
-npm version patch  # or minor, major
+# 2. Remove beta suffix and set stable version
+npm version minor  # or patch/major (removes -beta suffix)
 
 # 3. Update manifest.json version to match package.json
 # Edit manifest.json manually to match the new version
@@ -87,6 +114,13 @@ git commit -m "Bump version to vX.X.X for release"
 # 5. Push and create PR
 git push origin develop
 gh pr create --base main --head develop --title "Release vX.X.X"
+```
+
+**After release, start next beta cycle on `develop`:**
+```bash
+git checkout develop
+npm version preminor --preid=beta  # → X.Y.0-beta.0
+git push origin develop
 ```
 
 ## Architecture Overview

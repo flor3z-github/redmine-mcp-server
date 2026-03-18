@@ -1,4 +1,6 @@
 import type {
+  Attachment,
+  RedmineFile,
   RedmineIssue,
   RedmineProject,
   RedmineUser,
@@ -132,6 +134,54 @@ export function formatWikiPage(page: WikiPage): string {
 
   if (page.text) {
     parts.push(`\nContent:\n${page.text}`);
+  }
+
+  return parts.join('\n');
+}
+
+export function formatAttachment(attachment: Attachment): string {
+  const parts = [
+    `Attachment #${attachment.id}`,
+    `Filename: ${attachment.filename}`,
+    `Size: ${attachment.filesize} bytes`,
+    `URL: ${attachment.content_url}`,
+    `Author: ${attachment.author.name}`,
+    `Created: ${attachment.created_on}`,
+  ];
+
+  if (attachment.content_type) {
+    parts.push(`Type: ${attachment.content_type}`);
+  }
+
+  if (attachment.description) {
+    parts.push(`Description: ${attachment.description}`);
+  }
+
+  return parts.join('\n');
+}
+
+export function formatFile(file: RedmineFile): string {
+  const parts = [
+    `File #${file.id}`,
+    `Filename: ${file.filename}`,
+    `Size: ${file.filesize} bytes`,
+    `URL: ${file.content_url}`,
+    `Author: ${file.author.name}`,
+    `Created: ${file.created_on}`,
+    `Downloads: ${file.downloads}`,
+    `Digest: ${file.digest}`,
+  ];
+
+  if (file.content_type) {
+    parts.push(`Type: ${file.content_type}`);
+  }
+
+  if (file.description) {
+    parts.push(`Description: ${file.description}`);
+  }
+
+  if (file.version) {
+    parts.push(`Version: ${file.version.name}`);
   }
 
   return parts.join('\n');

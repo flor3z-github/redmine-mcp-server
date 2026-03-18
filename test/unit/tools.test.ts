@@ -27,6 +27,17 @@ import {
   createOrUpdateWikiPage,
   deleteWikiPage 
 } from '../../src/tools/wiki.js';
+import { updateJournal } from '../../src/tools/journals.js';
+import {
+  getAttachment,
+  updateAttachment,
+  deleteAttachment,
+} from '../../src/tools/attachments.js';
+import {
+  listFiles,
+  createFile,
+  uploadFile,
+} from '../../src/tools/files.js';
 import { redmineClient } from '../../src/client/index.js';
 
 // Mock the client
@@ -57,6 +68,13 @@ vi.mock('../../src/client/index.js', () => ({
     listIssuePriorities: vi.fn(),
     listTrackers: vi.fn(),
     customRequest: vi.fn(),
+    updateJournal: vi.fn(),
+    getAttachment: vi.fn(),
+    updateAttachment: vi.fn(),
+    deleteAttachment: vi.fn(),
+    listFiles: vi.fn(),
+    createFile: vi.fn(),
+    uploadFile: vi.fn(),
   },
 }));
 
@@ -676,6 +694,210 @@ describe('Wiki Tools', () => {
 
       expect(redmineClient.deleteWikiPage).toHaveBeenCalledWith('test', 'OldPage');
       expect(result.content[0].text).toContain('Wiki page "OldPage" deleted successfully');
+    });
+  });
+});
+
+describe('Journal Tools', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('updateJournal', () => {
+    it('should update a journal', async () => {
+      vi.mocked(redmineClient.updateJournal).mockResolvedValue(undefined);
+
+      const result = await updateJournal({
+        id: 10,
+        notes: 'Updated comment',
+        private_notes: true,
+      });
+
+      expect(redmineClient.updateJournal).toHaveBeenCalledWith(10, {
+        notes: 'Updated comment',
+        private_notes: true,
+      });
+      expect(result.content[0].text).toContain('Journal #10 updated successfully');
+    });
+
+    it('should handle errors', async () => {
+      vi.mocked(redmineClient.updateJournal).mockRejectedValue(new Error('Not found'));
+
+      const result = await updateJournal({ id: 999 });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Error: Not found');
+    });
+  });
+});
+
+describe('Attachment Tools', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('getAttachment', () => {
+    it('should get attachment details', async () => {
+      const mockAttachment = {
+        attachment: {
+          id: 1,
+          filename: 'test.pdf',
+          filesize: 2048,
+          content_type: 'application/pdf',
+          content_url: 'https://redmine.example.com/attachments/download/1/test.pdf',
+          author: { id: 1, name: 'John Doe' },
+          created_on: '2024-01-15',
+          description: 'A test file',
+        },
+      };
+
+      vi.mocked(redmineClient.getAttachment).mockResolvedValue(mockAttachment);
+
+      const result = await getAttachment({ id: 1 });
+
+      expect(redmineClient.getAttachment).toHaveBeenCalledWith(1);
+      expect(result.content[0].text).toContain('Attachment #1');
+      expect(result.content[0].text).toContain('Filename: test.pdf');
+      expect(result.content[0].text).toContain('Size: 2048 bytes');
+      expect(result.content[0].text).toContain('Author: John Doe');
+      expect(result.content[0].text).toContain('Description: A test file');
+    });
+
+    it('should handle errors', async () => {
+      vi.mocked(redmineClient.getAttachment).mockRejectedValue(new Error('Not found'));
+
+      const result = await getAttachment({ id: 999 });
+
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('updateAttachment', () => {
+    it('should update an attachment', async () => {
+      vi.mocked(redmineClient.updateAttachment).mockResolvedValue(undefined);
+
+      const result = await updateAttachment({
+        id: 1,
+        filename: 'renamed.pdf',
+        description: 'Updated description',
+      });
+
+      expect(redmineClient.updateAttachment).toHaveBeenCalledWith(1, {
+        filename: 'renamed.pdf',
+        description: 'Updated description',
+      });
+      expect(result.content[0].text).toContain('Attachment #1 updated successfully');
+    });
+  });
+
+  describe('deleteAttachment', () => {
+    it('should delete an attachment', async () => {
+      vi.mocked(redmineClient.deleteAttachment).mockResolvedValue(undefined);
+
+      const result = await deleteAttachment({ id: 1 });
+
+      expect(redmineClient.deleteAttachment).toHaveBeenCalledWith(1);
+      expect(result.content[0].text).toContain('Attachment #1 deleted successfully');
+    });
+  });
+});
+
+describe('File Tools', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('listFiles', () => {
+    it('should list project files', async () => {
+      const mockFiles = {
+        files: [
+          {
+            id: 1,
+            filename: 'doc.pdf',
+            filesize: 4096,
+            content_url: 'https://redmine.example.com/attachments/download/1/doc.pdf',
+            author: { id: 1, name: 'Jane Doe' },
+            created_on: '2024-01-15',
+            downloads: 5,
+            digest: 'abc123',
+          },
+        ],
+      };
+
+      vi.mocked(redmineClient.listFiles).mockResolvedValue(mockFiles);
+
+      const result = await listFiles({ project_id: 'test-project' });
+
+      expect(redmineClient.listFiles).toHaveBeenCalledWith('test-project');
+      expect(result.content[0].text).toContain('Found 1 file(s)');
+      expect(result.content[0].text).toContain('File #1');
+      expect(result.content[0].text).toContain('Filename: doc.pdf');
+      expect(result.content[0].text).toContain('Downloads: 5');
+    });
+
+    it('should handle empty results', async () => {
+      vi.mocked(redmineClient.listFiles).mockResolvedValue({ files: [] });
+
+      const result = await listFiles({ project_id: 'empty-project' });
+
+      expect(result.content[0].text).toContain('No files found');
+    });
+  });
+
+  describe('createFile', () => {
+    it('should create a file in project', async () => {
+      vi.mocked(redmineClient.createFile).mockResolvedValue(undefined);
+
+      const result = await createFile({
+        project_id: 'test-project',
+        token: 'upload-token-123',
+        version_id: 1,
+        filename: 'release.zip',
+      });
+
+      expect(redmineClient.createFile).toHaveBeenCalledWith('test-project', {
+        token: 'upload-token-123',
+        version_id: 1,
+        filename: 'release.zip',
+      });
+      expect(result.content[0].text).toContain('File added to project "test-project" successfully');
+    });
+
+    it('should validate required token', async () => {
+      const result = await createFile({
+        project_id: 'test-project',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Validation error');
+    });
+  });
+
+  describe('uploadFile', () => {
+    it('should upload file and return token', async () => {
+      vi.mocked(redmineClient.uploadFile).mockResolvedValue({
+        upload: { token: 'returned-token-789' },
+      });
+
+      const base64Content = Buffer.from('test file content').toString('base64');
+      const result = await uploadFile({
+        content_base64: base64Content,
+        filename: 'test.txt',
+      });
+
+      expect(redmineClient.uploadFile).toHaveBeenCalledWith(
+        Buffer.from(base64Content, 'base64'),
+        'test.txt'
+      );
+      expect(result.content[0].text).toContain('File uploaded successfully');
+      expect(result.content[0].text).toContain('Token: returned-token-789');
+    });
+
+    it('should validate required content_base64', async () => {
+      const result = await uploadFile({});
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Validation error');
     });
   });
 });

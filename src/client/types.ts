@@ -166,6 +166,25 @@ export interface Attachment {
   created_on: string;
 }
 
+export interface RedmineFile {
+  id: number;
+  filename: string;
+  filesize: number;
+  content_type?: string;
+  description?: string;
+  content_url: string;
+  thumbnail_url?: string;
+  author: { id: number; name: string };
+  created_on: string;
+  version?: { id: number; name: string };
+  digest: string;
+  downloads: number;
+}
+
+export interface Upload {
+  token: string;
+}
+
 export interface IssueRelation {
   id: number;
   issue_id: number;

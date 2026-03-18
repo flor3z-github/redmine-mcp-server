@@ -29,6 +29,10 @@
   ],
   "author": "gmlee",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flor3z-github/redmine-mcp-server"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.2",
     "axios": "^1.13.2",

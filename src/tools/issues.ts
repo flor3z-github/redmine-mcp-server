@@ -166,7 +166,7 @@ export const createIssueTool: Tool = {
       },
       description: { 
         type: 'string', 
-        description: 'Issue description' 
+        description: 'Issue description (in Markdown format)' 
       },
       tracker_id: { 
         type: 'number', 
@@ -286,11 +286,11 @@ export const updateIssueTool: Tool = {
       },
       description: { 
         type: 'string', 
-        description: 'Issue description' 
+        description: 'Issue description (in Markdown format)'
       },
-      notes: { 
-        type: 'string', 
-        description: 'Update notes/comment' 
+      notes: {
+        type: 'string',
+        description: 'Update notes/comment (in Markdown format)' 
       },
       private_notes: { 
         type: 'boolean', 

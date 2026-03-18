@@ -143,7 +143,7 @@ export const createOrUpdateWikiPageTool: Tool = {
       },
       text: { 
         type: 'string', 
-        description: 'Wiki page content (in Textile or Markdown format)' 
+        description: 'Wiki page content (in Markdown format)' 
       },
       comments: { 
         type: 'string', 

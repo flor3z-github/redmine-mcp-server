@@ -16,6 +16,9 @@ import type {
   Tracker,
   Activity,
   Version,
+  Attachment,
+  RedmineFile,
+  Upload,
 } from './types.js';
 
 export class RedmineClient {
@@ -214,6 +217,47 @@ export class RedmineClient {
 
   async listVersions(projectId: number | string): Promise<{ versions: Version[] }> {
     const response = await this.axios.get(`/projects/${projectId}/versions.json`);
+    return response.data;
+  }
+
+  // Journals
+  async updateJournal(id: number, data: { notes?: string; private_notes?: boolean }): Promise<void> {
+    await this.axios.put(`/journals/${id}.json`, { journal: data });
+  }
+
+  // Attachments
+  async getAttachment(id: number): Promise<{ attachment: Attachment }> {
+    const response = await this.axios.get(`/attachments/${id}.json`);
+    return response.data;
+  }
+
+  async updateAttachment(id: number, data: { filename?: string; description?: string }): Promise<void> {
+    await this.axios.patch(`/attachments/${id}.json`, { attachment: data });
+  }
+
+  async deleteAttachment(id: number): Promise<void> {
+    await this.axios.delete(`/attachments/${id}.json`);
+  }
+
+  // Files
+  async listFiles(projectId: number | string): Promise<{ files: RedmineFile[] }> {
+    const response = await this.axios.get(`/projects/${projectId}/files.json`);
+    return response.data;
+  }
+
+  async createFile(projectId: number | string, data: { token: string; version_id?: number; filename?: string; description?: string }): Promise<void> {
+    await this.axios.post(`/projects/${projectId}/files.json`, { file: data });
+  }
+
+  // Uploads
+  async uploadFile(content: Buffer, filename?: string): Promise<{ upload: Upload }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/octet-stream',
+    };
+    if (filename) {
+      headers['Content-Disposition'] = `attachment; filename="${filename}"`;
+    }
+    const response = await this.axios.post('/uploads.json', content, { headers });
     return response.data;
   }
 

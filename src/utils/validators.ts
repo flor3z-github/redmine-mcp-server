@@ -97,6 +97,32 @@ export const wikiPageSchema = z.object({
   parent_title: z.string().optional(),
 });
 
+// Journal validators
+export const updateJournalSchema = z.object({
+  notes: z.string().optional(),
+  private_notes: z.boolean().optional(),
+});
+
+// Attachment validators
+export const updateAttachmentSchema = z.object({
+  filename: z.string().min(1).optional(),
+  description: z.string().optional(),
+});
+
+// File validators
+export const createFileSchema = z.object({
+  token: z.string().min(1),
+  version_id: positiveIntegerSchema.optional(),
+  filename: z.string().optional(),
+  description: z.string().optional(),
+});
+
+// Upload validators
+export const uploadFileSchema = z.object({
+  content_base64: z.string().min(1),
+  filename: z.string().optional(),
+});
+
 // Generic pagination validator
 export const paginationSchema = z.object({
   offset: z.number().int().min(0).default(0),

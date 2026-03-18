@@ -1,9 +1,9 @@
 # Redmine MCP Server
 
-[![npm version](https://img.shields.io/npm/v/@flor3z-github/mcp-server-redmine.svg)](https://www.npmjs.com/package/@flor3z-github/mcp-server-redmine)
+[![npm version](https://img.shields.io/npm/v/@gmlee-ncurity/mcp-server-redmine.svg)](https://www.npmjs.com/package/@gmlee-ncurity/mcp-server-redmine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
-[![CI](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/flor3z-github/redmine-mcp-server/actions/workflows/ci.yml)
+[![CI](https://github.com/gmlee-ncurity/redmine-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/gmlee-ncurity/redmine-mcp-server/actions/workflows/ci.yml)
 
 A Model Context Protocol (MCP) server that enables AI assistants to interact with Redmine project management systems. This server provides comprehensive access to Redmine's features including issues, projects, time tracking, users, and wiki pages.
 
@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine.com",
         "REDMINE_API_KEY": "your-api-key"
@@ -73,20 +73,20 @@ A Model Context Protocol (MCP) server that enables AI assistants to interact wit
 ### Global Installation (recommended)
 
 ```bash
-npm install -g @flor3z-github/mcp-server-redmine
+npm install -g @gmlee-ncurity/mcp-server-redmine
 ```
 
 ### Direct Usage (no installation required)
 
 ```bash
-npx @flor3z-github/mcp-server-redmine
+npx @gmlee-ncurity/mcp-server-redmine
 ```
 
 ### For local development
 
 ```bash
 # Clone the repository
-git clone https://github.com/flor3z-github/redmine-mcp-server.git
+git clone https://github.com/gmlee-ncurity/redmine-mcp-server.git
 cd redmine-mcp-server
 
 # Install dependencies
@@ -139,7 +139,7 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -182,7 +182,7 @@ You can use this MCP server with VS Code extensions that support the Model Conte
   "cline.mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+      "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine-instance.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -206,7 +206,7 @@ Add to your Zed settings (`~/.config/zed/settings.json`):
     "redmine": {
       "command": {
         "path": "npx",
-        "args": ["-y", "@flor3z-github/mcp-server-redmine"],
+        "args": ["-y", "@gmlee-ncurity/mcp-server-redmine"],
         "env": {
           "REDMINE_URL": "https://your-redmine-instance.com",
           "REDMINE_API_KEY": "your-api-key-here"
@@ -249,6 +249,19 @@ Add to your Zed settings (`~/.config/zed/settings.json`):
 - `redmine_get_wiki_page` - Get wiki page content
 - `redmine_create_or_update_wiki_page` - Create/update wiki page
 - `redmine_delete_wiki_page` - Delete wiki page
+
+### Journal Tools
+- `redmine_update_journal` - Update a journal (comment) on an issue
+
+### Attachment Tools
+- `redmine_get_attachment` - Get attachment details
+- `redmine_update_attachment` - Update attachment (filename, description)
+- `redmine_delete_attachment` - Delete an attachment
+
+### File Tools
+- `redmine_list_files` - List files for a project
+- `redmine_create_file` - Add an uploaded file to a project
+- `redmine_upload_file` - Upload a file and get a token
 
 ### Utility Tools
 - `redmine_list_statuses` - List issue statuses
@@ -327,33 +340,55 @@ This project uses Git Flow with two main branches:
 - **`main`** - Production-ready code, triggers releases
 - **`develop`** - Integration branch for features (default branch)
 
+### Versioning Strategy (Beta / Stable)
+
+This project uses npm dist-tags to separate beta and stable releases:
+
+- **`develop` branch** → beta versions (`1.1.0-beta.0`) → `npm install @gmlee-ncurity/mcp-server-redmine@beta`
+- **`main` branch** → stable versions (`1.1.0`) → `npm install @gmlee-ncurity/mcp-server-redmine`
+
+```
+develop: 1.1.0-beta.0 → 1.1.0-beta.1 → 1.1.0-beta.2
+                                              ↓ (PR merge to main)
+main:                                       1.1.0 (stable)
+develop: 1.2.0-beta.0  ← next cycle
+```
+
 ### Release Process
 
-To create a release:
+**Bump beta version (on `develop`):**
+```bash
+npm version prerelease --preid=beta   # 1.1.0-beta.0 → 1.1.0-beta.1
+```
 
+**Create a stable release:**
 ```bash
 # 1. Ensure you're on develop with latest changes
 git checkout develop
 git pull origin develop
 
-# 2. Bump version in package.json
-npm version patch  # or minor, major
+# 2. Set stable version (removes -beta suffix)
+npm version minor  # or patch, major
 
 # 3. Push and create PR to main
 git push origin develop
 gh pr create --base main --head develop --title "Release vX.X.X"
 
 # 4. Merge PR to trigger automated release
-```
 
-When the PR is merged to `main`, CI/CD automatically publishes to npm registry.
+# 5. Start next beta cycle on develop
+git checkout develop
+npm version preminor --preid=beta  # → X.Y.0-beta.0
+git push origin develop
+```
 
 ### CI/CD Pipeline
 
 GitHub Actions automatically:
 - Runs tests on Node.js 20.x, 22.x, and 24.x
 - Checks linting and builds
-- Auto-publishes to npm when merged to `main`
+- Publishes beta to npm (`--tag beta`) when pushed to `develop` with a beta version
+- Publishes stable to npm when merged to `main`
 - Uploads test coverage reports
 
 ## Contributing

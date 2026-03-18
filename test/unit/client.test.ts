@@ -3,8 +3,27 @@ import axios from 'axios';
 import { RedmineClient } from '../../src/client/index.js';
 import { config } from '../../src/config.js';
 
-// Mock axios
-vi.mock('axios');
+// Mock axios - must provide interceptors in the factory since singleton is created at import time
+vi.mock('axios', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return {
+    ...actual,
+    default: {
+      create: vi.fn(() => ({
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+        request: vi.fn(),
+        interceptors: {
+          request: { use: vi.fn() },
+          response: { use: vi.fn() },
+        },
+      })),
+    },
+  };
+});
 const mockedAxios = vi.mocked(axios, true);
 
 // Mock config
@@ -37,6 +56,9 @@ describe('RedmineClient', () => {
       delete: vi.fn(),
       request: vi.fn(),
       interceptors: {
+        request: {
+          use: vi.fn(),
+        },
         response: {
           use: vi.fn(),
         },

@@ -6,6 +6,14 @@ export const positiveIntegerSchema = z.number().int().positive();
 export const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)');
 export const emailSchema = z.string().email();
 
+// Upload schema for file attachments
+export const uploadSchema = z.object({
+  token: z.string().min(1),
+  filename: z.string().optional(),
+  description: z.string().optional(),
+  content_type: z.string().optional(),
+});
+
 // Issue validators
 export const createIssueSchema = z.object({
   project_id: positiveIntegerSchema,
@@ -25,6 +33,7 @@ export const createIssueSchema = z.object({
   is_private: z.boolean().optional(),
   watcher_user_ids: z.array(positiveIntegerSchema).optional(),
   custom_field_values: z.record(z.string(), z.string()).optional(),
+  uploads: z.array(uploadSchema).optional(),
 });
 
 export const updateIssueSchema = createIssueSchema.partial().extend({

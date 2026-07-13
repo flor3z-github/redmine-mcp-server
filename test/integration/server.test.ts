@@ -130,7 +130,7 @@ describe('Redmine MCP Server Integration', () => {
       const result = await handler({});
       expect(result).toHaveProperty('content');
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Validation error');
+      expect(result.content[0].text).toContain('Validation error: id');
     });
 
     it('should handle network errors gracefully', async () => {

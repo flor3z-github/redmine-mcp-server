@@ -72,7 +72,7 @@ describe('formatJournals', () => {
     const js = [journal(1, long)];
     const out = formatJournals(js, { includeJournals: true, journalNotesMaxChars: 10 });
     expect(out).toContain('xxxxxxxxxx …(+40 chars truncated');
-    expect(out).toContain('journals_offset=0 journals_limit=1 journal_notes_max_chars=0 for full');
+    expect(out).toContain('journals_offset=0 journals_limit=1 journals_order=desc journal_notes_max_chars=0 for full');
   });
 
   it('does not truncate when cap is 0 (unlimited escape hatch)', () => {
@@ -81,6 +81,19 @@ describe('formatJournals', () => {
     const out = formatJournals(js, { includeJournals: true, journalNotesMaxChars: 0 });
     expect(out).toContain(long);
     expect(out).not.toContain('truncated');
+  });
+
+  it('marker reflects journals_order for asc drill-down', () => {
+    const long = 'z'.repeat(50);
+    const js = [journal(1, long), journal(2, 'short')];
+    const out = formatJournals(js, {
+      includeJournals: true,
+      journalsOrder: 'asc',
+      journalNotesMaxChars: 10,
+    });
+    // asc order keeps [j1(long), j2(short)]; offset 0 is the long note → truncated
+    expect(out).toContain('journals_order=asc');
+    expect(out).toContain('journals_offset=0');
   });
 });
 

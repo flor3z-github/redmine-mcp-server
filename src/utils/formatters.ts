@@ -66,7 +66,7 @@ export function formatJournals(
       note = fullNote.substring(0, noteCap);
       marker =
         ` …(+${cut} chars truncated, journals_offset=${absoluteIndex} ` +
-        `journals_limit=1 journal_notes_max_chars=0 for full)`;
+        `journals_limit=1 journals_order=${order} journal_notes_max_chars=0 for full)`;
     }
     lines.push(`- ${j.user.name} (${j.created_on}): ${note}${marker}`);
   });

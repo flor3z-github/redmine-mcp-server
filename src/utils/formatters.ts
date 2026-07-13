@@ -1,5 +1,6 @@
 import type {
   Attachment,
+  Journal,
   RedmineFile,
   RedmineIssue,
   RedmineProject,
@@ -8,7 +9,72 @@ import type {
   WikiPage,
 } from '../client/types.js';
 
-export function formatIssue(issue: RedmineIssue): string {
+export interface FormatIssueOptions {
+  descriptionMaxChars?: number;
+  includeJournals?: boolean;
+  journalsLimit?: number;
+  journalsOffset?: number;
+  journalsOrder?: 'asc' | 'desc';
+  journalNotesMaxChars?: number;
+}
+
+export function formatJournals(
+  journals: Journal[] | undefined,
+  opts: FormatIssueOptions = {}
+): string {
+  if (journals === undefined) {
+    return '';
+  }
+
+  const withNotes = journals.filter(
+    (j) => typeof j.notes === 'string' && j.notes.trim().length > 0
+  );
+  const total = withNotes.length;
+  if (total === 0) {
+    return '\nComments: none';
+  }
+
+  if (!opts.includeJournals) {
+    return `\nComments: ${total} total (not shown — pass include_journals=true)`;
+  }
+
+  const order = opts.journalsOrder ?? 'desc';
+  const ordered = order === 'desc' ? [...withNotes].reverse() : [...withNotes];
+
+  const offset = opts.journalsOffset ?? 0;
+  const limit = opts.journalsLimit ?? 10;
+  if (offset >= total) {
+    return `\nComments: ${total} total (offset ${offset} exceeds range)`;
+  }
+
+  const windowed = ordered.slice(offset, offset + limit);
+  const shownEnd = offset + windowed.length - 1;
+  const orderLabel = order === 'desc' ? 'newest first' : 'oldest first';
+  const noteCap = opts.journalNotesMaxChars ?? 0;
+
+  const lines = [
+    `\nComments: ${total} total (showing ${offset}-${shownEnd}, ${orderLabel})`,
+  ];
+
+  windowed.forEach((j, i) => {
+    const absoluteIndex = offset + i;
+    const fullNote = j.notes as string;
+    let note = fullNote;
+    let marker = '';
+    if (noteCap > 0 && fullNote.length > noteCap) {
+      const cut = fullNote.length - noteCap;
+      note = fullNote.substring(0, noteCap);
+      marker =
+        ` …(+${cut} chars truncated, journals_offset=${absoluteIndex} ` +
+        `journals_limit=1 journal_notes_max_chars=0 for full)`;
+    }
+    lines.push(`- ${j.user.name} (${j.created_on}): ${note}${marker}`);
+  });
+
+  return lines.join('\n');
+}
+
+export function formatIssue(issue: RedmineIssue, opts: FormatIssueOptions = {}): string {
   const parts = [
     `#${issue.id} - ${issue.subject}`,
     `Project: ${issue.project.name}`,
@@ -30,27 +96,24 @@ export function formatIssue(issue: RedmineIssue): string {
   }
 
   if (issue.description) {
-    parts.push(`\nDescription:\n${issue.description}`);
+    const desc =
+      opts.descriptionMaxChars && opts.descriptionMaxChars > 0
+        ? truncateText(issue.description, opts.descriptionMaxChars)
+        : issue.description;
+    parts.push(`\nDescription:\n${desc}`);
   }
 
   if (issue.start_date) {
     parts.push(`Start date: ${issue.start_date}`);
   }
 
-  if (issue.due_date) {
-    parts.push(`Due date: ${issue.due_date}`);
-  }
-
   if (issue.fixed_version) {
     parts.push(`Version: ${issue.fixed_version.name}`);
   }
 
-  if (issue.journals && issue.journals.length > 0) {
-    parts.push(`\nComments:`);
-    issue.journals.forEach((journal) => {
-        if (!journal.notes) return;
-      parts.push(`- ${journal.user.name} (${journal.created_on}): ${journal.notes}`);
-    });
+  const journalsText = formatJournals(issue.journals, opts);
+  if (journalsText) {
+    parts.push(journalsText);
   }
 
   return parts.join('\n');

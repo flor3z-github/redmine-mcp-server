@@ -65,6 +65,16 @@ See [USAGE.md](USAGE.md) for detailed configuration, Docker deployment, and reve
 
 All tools are prefixed with `redmine_` (e.g., `redmine_list_issues`).
 
+## Breaking Changes
+
+### `redmine_get_issue` — Comments Now Opt-in
+
+**Issue comments are no longer returned by default.** To retrieve comments, use one of:
+- `include_journals=true` — returns comments with pagination control via `journals_limit`, `journals_offset`, `journals_order`
+- `include: ["journals"]` — same effect, unless `include_journals` is explicitly set to `false`
+
+For details and new pagination parameters, see [docs/API.md](docs/API.md#redmine_get_issue).
+
 ## Installation
 
 ```bash

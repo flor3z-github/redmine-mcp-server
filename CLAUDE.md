@@ -41,36 +41,35 @@ This project uses a **Git Flow** branching model with two main branches:
 **Release Workflow (from `develop` to `main`):**
 1. Create Pull Request from `develop` to `main`
 2. Review and merge PR to trigger release
-3. Automated release publishes to NPM and creates GitHub release
+3. Automated release publishes to NPM when the package version has changed
 
 ### CI/CD Workflow Monitoring
 Monitor workflows based on the branch you're working with:
 
 #### Commands for Monitoring
-1. **Check workflow status**: `gh run list --repo gmlee-ncurity/redmine-mcp-server --limit 3`
-2. **Watch active workflow**: `gh run watch <run-id> --repo gmlee-ncurity/redmine-mcp-server`
-3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo gmlee-ncurity/redmine-mcp-server`
-4. **Monitor workflow URL**: https://github.com/gmlee-ncurity/redmine-mcp-server/actions
+1. **Check workflow status**: `gh run list --repo flor3z-github/redmine-mcp-server --limit 3`
+2. **Watch active workflow**: `gh run watch <run-id> --repo flor3z-github/redmine-mcp-server`
+3. **View failed logs**: `gh run view --log-failed --job=<job-id> --repo flor3z-github/redmine-mcp-server`
+4. **Monitor workflow URL**: https://github.com/flor3z-github/redmine-mcp-server/actions
 
 #### Branch-Specific CI/CD Behavior
 **`develop` branch pushes trigger:**
-- **Test Jobs**: Linting, testing, and building on Node.js 20.x and 22.x
-- **Develop Build Job**: DXT validation and packaging (development build)
-- **No Publishing**: Development builds don't publish to NPM or create releases
+- **Test Jobs**: Linting, testing, and building on Node.js 20.x, 22.x, and 24.x
+- **Beta Publish Job**: Publishes to NPM with the `beta` dist-tag only when the package version contains `beta` and differs from the published beta version
+- **No Stable Release**: Development builds don't create stable releases
 
 **`main` branch pushes (via merged PR) trigger:**
 - **Test Jobs**: Full test suite validation
-- **Publish Job**: NPM publishing, GitHub release creation, DXT asset upload
-- **Release Automation**: Version detection, DXT packaging, and distribution
+- **Publish Job**: Publishes to NPM when the package version differs from the published stable version
 
 **Pull Requests trigger:**
 - **Test Jobs Only**: Validates proposed changes without publishing
 
 #### Versioning Strategy (Beta / Stable)
 
-This fork uses npm dist-tag based versioning to separate beta and stable releases:
+This fork can use npm dist-tag based versioning to separate beta and stable releases:
 
-- **`develop` branch**: Always uses `-beta.N` suffix (e.g., `1.1.0-beta.0`)
+- **`develop` branch**: Publishes beta only when the package version uses a `-beta.N` suffix (e.g., `1.1.0-beta.0`)
 - **`main` branch**: Stable versions without suffix (e.g., `1.1.0`)
 - **npm dist-tag**: `latest` for stable, `beta` for pre-release
 
@@ -101,22 +100,19 @@ To release changes from `develop` to `main`:
 git checkout develop
 git pull origin develop
 
-# 2. Remove beta suffix and set stable version
-npm version minor  # or patch/major (removes -beta suffix)
+# 2. Bump version in package.json
+npm version patch  # or minor, major
 
-# 3. Update manifest.json version to match package.json
-# Edit manifest.json manually to match the new version
-
-# 4. Commit version bump
-git add package.json manifest.json
+# 3. Commit version bump
+git add package.json package-lock.json
 git commit -m "Bump version to vX.X.X for release"
 
-# 5. Push and create PR
+# 4. Push and create PR
 git push origin develop
 gh pr create --base main --head develop --title "Release vX.X.X"
 ```
 
-**After release, start next beta cycle on `develop`:**
+**Optional: start a beta cycle on `develop`:**
 ```bash
 git checkout develop
 npm version preminor --preid=beta  # → X.Y.0-beta.0

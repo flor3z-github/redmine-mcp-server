@@ -77,7 +77,6 @@ GitHub Actions automatically:
 - Runs tests on Node.js 20.x, 22.x, and 24.x
 - Checks linting and builds
 - Auto-publishes to npm when merged to `main`
-- Uploads test coverage reports
 
 ## Guidelines
 

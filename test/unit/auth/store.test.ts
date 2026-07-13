@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -12,6 +12,7 @@ describe('OAuth Store', () => {
     process.env.MCP_DATA_DIR = tmpDir;
 
     // Re-import to get fresh module state
+    vi.resetModules();
     store = await import('../../../src/auth/store.js');
     store.loadStore();
   });
@@ -138,6 +139,111 @@ describe('OAuth Store', () => {
       const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
       expect(data.accessTokens['persist-token']).toBeDefined();
       expect(data.accessTokens['persist-token'].redmineApiKey).toBe('persist-key');
+    });
+
+    it('should write the store file with owner-only permissions', () => {
+      store.storeAccessToken('secure-token', {
+        clientId: 'c1',
+        redmineApiKey: 'secure-key',
+        scopes: [],
+      });
+
+      const file = path.join(tmpDir, 'oauth-store.json');
+      const mode = fs.statSync(file).mode & 0o777;
+
+      expect(mode).toBe(0o600);
+      expect(fs.readdirSync(tmpDir).filter(name => name.endsWith('.tmp'))).toEqual([]);
+    });
+
+    it('should load partial store files with empty defaults', () => {
+      const file = path.join(tmpDir, 'oauth-store.json');
+      fs.writeFileSync(file, JSON.stringify({
+        accessTokens: {
+          active: {
+            clientId: 'c1',
+            redmineApiKey: 'active-key',
+            scopes: [],
+            expiresAt: Date.now() + 60_000,
+          },
+        },
+      }), 'utf-8');
+      fs.chmodSync(file, 0o644);
+
+      store.loadStore();
+
+      expect(store.getAccessToken('active')?.redmineApiKey).toBe('active-key');
+      expect(store.getClient('missing')).toBeUndefined();
+      expect(fs.statSync(file).mode & 0o777).toBe(0o600);
+    });
+
+    it('should fall back to an empty store when persisted JSON is invalid', () => {
+      const file = path.join(tmpDir, 'oauth-store.json');
+      fs.writeFileSync(file, 'not-json', 'utf-8');
+
+      expect(() => store.loadStore()).not.toThrow();
+      expect(store.getAccessToken('active')).toBeUndefined();
+      expect(store.getRefreshToken('refresh')).toBeUndefined();
+    });
+
+    it('should prune expired auth codes and access tokens when loading', () => {
+      const file = path.join(tmpDir, 'oauth-store.json');
+      const past = Date.now() - 60_000;
+      const future = Date.now() + 60_000;
+
+      fs.writeFileSync(file, JSON.stringify({
+        authCodes: {
+          expired: {
+            clientId: 'c1',
+            redmineApiKey: 'expired-key',
+            codeChallenge: 'challenge',
+            redirectUri: 'http://localhost/callback',
+            scopes: [],
+            expiresAt: past,
+          },
+          active: {
+            clientId: 'c1',
+            redmineApiKey: 'active-key',
+            codeChallenge: 'challenge',
+            redirectUri: 'http://localhost/callback',
+            scopes: [],
+            expiresAt: future,
+          },
+        },
+        accessTokens: {
+          expired: {
+            clientId: 'c1',
+            redmineApiKey: 'expired-key',
+            scopes: [],
+            expiresAt: past,
+          },
+          active: {
+            clientId: 'c1',
+            redmineApiKey: 'active-key',
+            scopes: [],
+            expiresAt: future,
+          },
+        },
+        refreshTokens: {
+          refresh: {
+            clientId: 'c1',
+            redmineApiKey: 'refresh-key',
+            scopes: [],
+          },
+        },
+      }), 'utf-8');
+
+      store.loadStore();
+
+      expect(store.getAuthCode('expired')).toBeUndefined();
+      expect(store.getAuthCode('active')?.redmineApiKey).toBe('active-key');
+      expect(store.getAccessToken('expired')).toBeUndefined();
+      expect(store.getAccessToken('active')?.redmineApiKey).toBe('active-key');
+      expect(store.getRefreshToken('refresh')?.redmineApiKey).toBe('refresh-key');
+
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      expect(data.authCodes.expired).toBeUndefined();
+      expect(data.accessTokens.expired).toBeUndefined();
+      expect(data.refreshTokens.refresh).toBeDefined();
     });
   });
 });

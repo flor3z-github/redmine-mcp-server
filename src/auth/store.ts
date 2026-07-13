@@ -41,15 +41,20 @@ interface StoreData {
 
 const AUTH_CODE_TTL = 5 * 60 * 1000; // 5 minutes
 const ACCESS_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
+const STORE_FILE_MODE = 0o600;
 
 // --- State ---
 
-let store: StoreData = {
-  clients: {},
-  authCodes: {},
-  accessTokens: {},
-  refreshTokens: {},
-};
+function createEmptyStore(): StoreData {
+  return {
+    clients: {},
+    authCodes: {},
+    accessTokens: {},
+    refreshTokens: {},
+  };
+}
+
+let store: StoreData = createEmptyStore();
 
 function getDataDir(): string {
   return process.env.MCP_DATA_DIR || path.join(__dirname, '..', '..', 'data');
@@ -66,6 +71,45 @@ function ensureDataDir(): void {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeRecord<T>(value: unknown): Record<string, T> {
+  return isRecord(value) ? value as Record<string, T> : {};
+}
+
+function normalizeStoreData(value: unknown): StoreData {
+  const data = isRecord(value) ? value : {};
+
+  return {
+    clients: normalizeRecord<OAuthClientInformationFull>(data.clients),
+    authCodes: normalizeRecord<AuthCodeRecord>(data.authCodes),
+    accessTokens: normalizeRecord<AccessTokenRecord>(data.accessTokens),
+    refreshTokens: normalizeRecord<RefreshTokenRecord>(data.refreshTokens),
+  };
+}
+
+function pruneExpiredRecords(data: StoreData, now = Date.now()): boolean {
+  let changed = false;
+
+  for (const [code, record] of Object.entries(data.authCodes)) {
+    if (!record || typeof record.expiresAt !== 'number' || now > record.expiresAt) {
+      delete data.authCodes[code];
+      changed = true;
+    }
+  }
+
+  for (const [token, record] of Object.entries(data.accessTokens)) {
+    if (!record || typeof record.expiresAt !== 'number' || now > record.expiresAt) {
+      delete data.accessTokens[token];
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 // --- Persistence ---
 
 export function loadStore(): void {
@@ -73,18 +117,41 @@ export function loadStore(): void {
   const file = getStoreFile();
   if (fs.existsSync(file)) {
     try {
-      store = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      store = normalizeStoreData(JSON.parse(fs.readFileSync(file, 'utf-8')));
+      fs.chmodSync(file, STORE_FILE_MODE);
+      if (pruneExpiredRecords(store)) {
+        saveStore();
+      }
       console.error(`[${new Date().toISOString()}] [INFO] OAuth store loaded`);
     } catch {
       console.error(`[${new Date().toISOString()}] [WARN] Failed to load OAuth store, starting fresh`);
-      store = { clients: {}, authCodes: {}, accessTokens: {}, refreshTokens: {} };
+      store = createEmptyStore();
     }
+  } else {
+    store = createEmptyStore();
   }
 }
 
 export function saveStore(): void {
   ensureDataDir();
-  fs.writeFileSync(getStoreFile(), JSON.stringify(store, null, 2), 'utf-8');
+  pruneExpiredRecords(store);
+
+  const file = getStoreFile();
+  const tmpFile = `${file}.${process.pid}.${randomUUID()}.tmp`;
+
+  try {
+    fs.writeFileSync(tmpFile, JSON.stringify(store, null, 2), {
+      encoding: 'utf-8',
+      mode: STORE_FILE_MODE,
+    });
+    fs.renameSync(tmpFile, file);
+    fs.chmodSync(file, STORE_FILE_MODE);
+  } catch (error) {
+    if (fs.existsSync(tmpFile)) {
+      fs.unlinkSync(tmpFile);
+    }
+    throw error;
+  }
 }
 
 // --- Clients ---

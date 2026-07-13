@@ -36,22 +36,23 @@
     "url": "https://github.com/flor3z-github/redmine-mcp-server"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.24.2",
-    "axios": "^1.13.2",
-    "zod": "^4.1.13"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "^1.16.0",
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^24.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.48.1",
-    "@typescript-eslint/parser": "^8.48.1",
-    "@vitest/coverage-v8": "^4.0.15",
-    "eslint": "^9.39.1",
+    "@types/node": "^24.12.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
+    "@vitest/coverage-v8": "^4.1.5",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.15"
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": ">=20.0.0"

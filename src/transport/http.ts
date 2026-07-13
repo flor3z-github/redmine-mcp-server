@@ -18,12 +18,15 @@ export async function startHttpTransport(port: number, host: string): Promise<vo
   const provider = new RedmineOAuthProvider(config.redmine.url);
 
   // Determine issuerUrl
-  const hasTls = !!(config.transport.tlsCert && config.transport.tlsKey);
+  const tlsConfig =
+    config.transport.tlsCert && config.transport.tlsKey
+      ? { certPath: config.transport.tlsCert, keyPath: config.transport.tlsKey }
+      : undefined;
   let issuerUrl: URL;
 
   if (config.transport.issuerUrl) {
     issuerUrl = new URL(config.transport.issuerUrl);
-  } else if (hasTls) {
+  } else if (tlsConfig) {
     issuerUrl = new URL(`https://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
   } else {
     issuerUrl = new URL(`http://localhost:${port}`);
@@ -166,9 +169,9 @@ export async function startHttpTransport(port: number, host: string): Promise<vo
   return new Promise((resolve) => {
     let server: ReturnType<typeof https.createServer> | ReturnType<typeof app.listen>;
 
-    if (hasTls) {
-      const cert = fs.readFileSync(config.transport.tlsCert!);
-      const key = fs.readFileSync(config.transport.tlsKey!);
+    if (tlsConfig) {
+      const cert = fs.readFileSync(tlsConfig.certPath);
+      const key = fs.readFileSync(tlsConfig.keyPath);
       server = https.createServer({ cert, key }, app);
       server.listen(port, host, () => {
         console.error(`[${new Date().toISOString()}] [INFO] Streamable HTTP server listening on https://${host}:${port}`);

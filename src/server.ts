@@ -8,9 +8,9 @@ import {
 import { config } from './config.js';
 import { tools, toolHandlers } from './tools/index.js';
 import { startStdioTransport, startHttpTransport } from './transport/index.js';
+import { SERVER_VERSION } from './version.js';
 
 const SERVER_NAME = 'mcp-server-redmine';
-const SERVER_VERSION = '1.0.0';
 
 export async function createRedmineServer(): Promise<Server> {
   const server = new Server(

@@ -15,10 +15,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -38,12 +38,25 @@ jobs:
     - name: Run build
       run: npm run build
 
-    - name: Upload coverage reports
+    - name: Check npm package version
       if: matrix.node-version == '20.x'
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        fail_ci_if_error: false
+      id: npm-version
+      run: |
+        PACKAGE_NAME=$(node -p "require('./package.json').name")
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        if npm view "$PACKAGE_NAME@$CURRENT_VERSION" version >/dev/null 2>&1; then
+          echo "published=true" >> $GITHUB_OUTPUT
+        else
+          echo "published=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Validate npm package publish
+      if: matrix.node-version == '20.x' && steps.npm-version.outputs.published == 'false'
+      run: npm publish --dry-run --access public
+
+    - name: Validate npm package contents
+      if: matrix.node-version == '20.x' && steps.npm-version.outputs.published == 'true'
+      run: npm pack --dry-run
 
   publish-beta:
     needs: test
@@ -54,10 +67,10 @@ jobs:
       id-token: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
@@ -72,10 +85,12 @@ jobs:
     - name: Check if beta version
       id: version-check
       run: |
+        PACKAGE_NAME=$(node -p "require('./package.json').name")
         CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "package=$PACKAGE_NAME" >> $GITHUB_OUTPUT
         echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
         if echo "$CURRENT_VERSION" | grep -q "beta"; then
-          PUBLISHED_VERSION=$(npm view @gmlee-ncurity/mcp-server-redmine@beta version 2>/dev/null || echo "0.0.0")
+          PUBLISHED_VERSION=$(npm view "$PACKAGE_NAME@beta" version 2>/dev/null || echo "0.0.0")
           echo "published=$PUBLISHED_VERSION" >> $GITHUB_OUTPUT
           if [ "$CURRENT_VERSION" != "$PUBLISHED_VERSION" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -101,12 +116,12 @@ jobs:
       id-token: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
@@ -121,8 +136,10 @@ jobs:
     - name: Check if version changed
       id: version-check
       run: |
+        PACKAGE_NAME=$(node -p "require('./package.json').name")
         CURRENT_VERSION=$(node -p "require('./package.json').version")
-        PUBLISHED_VERSION=$(npm view @gmlee-ncurity/mcp-server-redmine version 2>/dev/null || echo "0.0.0")
+        PUBLISHED_VERSION=$(npm view "$PACKAGE_NAME" version 2>/dev/null || echo "0.0.0")
+        echo "package=$PACKAGE_NAME" >> $GITHUB_OUTPUT
         echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
         echo "published=$PUBLISHED_VERSION" >> $GITHUB_OUTPUT
         if [ "$CURRENT_VERSION" != "$PUBLISHED_VERSION" ]; then

@@ -132,6 +132,57 @@ export const uploadFileSchema = z.object({
   filename: z.string().optional(),
 });
 
+const customRequestMethods = ['GET', 'POST', 'PUT', 'DELETE'] as const;
+export type CustomRequestMethod = typeof customRequestMethods[number];
+
+function isCustomRequestMethod(method: string): method is CustomRequestMethod {
+  return customRequestMethods.includes(method as CustomRequestMethod);
+}
+
+export function isSafeRedmineApiPath(path: string): boolean {
+  if (!path.startsWith('/') || path.startsWith('//')) {
+    return false;
+  }
+
+  if (path.includes('?') || path.includes('#') || path.includes('\\')) {
+    return false;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) {
+    return false;
+  }
+
+  return !path.split('/').includes('..');
+}
+
+export function validateCustomRequestMethod(method: string): CustomRequestMethod {
+  if (isCustomRequestMethod(method)) {
+    return method;
+  }
+
+  throw new ValidationError('Method must be one of GET, POST, PUT, DELETE', 'method');
+}
+
+export function validateCustomRequestPath(path: string): string {
+  if (isSafeRedmineApiPath(path)) {
+    return path;
+  }
+
+  throw new ValidationError(
+    'Path must be a Redmine API relative path without protocol, query string, hash, or parent directory segments',
+    'path'
+  );
+}
+
+export const customRequestSchema = z.object({
+  method: z.enum(customRequestMethods),
+  path: z.string().min(1).refine(isSafeRedmineApiPath, {
+    message: 'Path must be a Redmine API relative path without protocol, query string, hash, or parent directory segments',
+  }),
+  data: z.record(z.string(), z.unknown()).optional(),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+
 // Generic pagination validator
 export const paginationSchema = z.object({
   offset: z.number().int().min(0).default(0),

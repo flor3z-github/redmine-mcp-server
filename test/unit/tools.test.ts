@@ -38,6 +38,7 @@ import {
   createFile,
   uploadFile,
 } from '../../src/tools/files.js';
+import { customRequest } from '../../src/tools/index.js';
 import { redmineClient } from '../../src/client/index.js';
 
 // Mock the client
@@ -899,5 +900,48 @@ describe('File Tools', () => {
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Validation error');
     });
+  });
+});
+
+describe('Custom Request Tool', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should make custom API requests with safe relative paths', async () => {
+    vi.mocked(redmineClient.customRequest).mockResolvedValue({ ok: true });
+
+    const result = await customRequest({
+      method: 'GET',
+      path: '/issues.json',
+      params: { limit: 10 },
+    });
+
+    expect(redmineClient.customRequest).toHaveBeenCalledWith(
+      'GET',
+      '/issues.json',
+      undefined,
+      { limit: 10 }
+    );
+    expect(result.content[0].text).toContain('"ok": true');
+  });
+
+  it.each([
+    'https://example.com/issues.json',
+    'http://example.com/issues.json',
+    '//example.com/issues.json',
+    '../issues.json',
+    '/projects/../issues.json',
+    '/issues.json?limit=1',
+    '/issues.json#section',
+  ])('should reject unsafe custom API path %s before calling the client', async (path) => {
+    const result = await customRequest({
+      method: 'GET',
+      path,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Validation error');
+    expect(redmineClient.customRequest).not.toHaveBeenCalled();
   });
 });

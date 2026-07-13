@@ -76,7 +76,6 @@ export const telemetry = new Telemetry();
 export function trackApiCall(
   endpoint: string,
   method: string
-  // eslint-disable-next-line no-unused-vars
 ): { start: () => void; end: (arg: number) => void } {
   const startTime = Date.now();
 

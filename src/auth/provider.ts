@@ -117,7 +117,12 @@ export class RedmineOAuthProvider implements OAuthServerProvider {
       return;
     }
 
-    const session = authSessions.get(authSessionToken)!;
+    const session = authSessions.get(authSessionToken);
+    if (!session) {
+      res.status(400).send('Invalid or expired auth session');
+      return;
+    }
+
     authSessions.delete(authSessionToken);
 
     // Generate auth code

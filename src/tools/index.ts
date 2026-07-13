@@ -1,6 +1,7 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { redmineClient } from '../client/index.js';
 import { formatErrorResponse } from '../utils/errors.js';
+import { customRequestSchema, validateInput } from '../utils/validators.js';
 
 // Import all tools
 import {
@@ -114,14 +115,9 @@ export const customRequestTool: Tool = {
 
 export async function customRequest(input: unknown) {
   try {
-    const { method, path, data, params } = input as {
-      method: string;
-      path: string;
-      data?: unknown;
-      params?: unknown;
-    };
+    const { method, path, data, params } = validateInput(customRequestSchema, input);
     
-    const response = await redmineClient.customRequest(method, path, data, params as Record<string, unknown>);
+    const response = await redmineClient.customRequest(method, path, data, params);
     
     return {
       content: [{
@@ -352,7 +348,6 @@ export const tools: Tool[] = [
 ];
 
 // Export tool handlers map
-// eslint-disable-next-line no-unused-vars
 export const toolHandlers: Record<string, (_input?: unknown) => Promise<unknown>> = {
   // Issue handlers
   redmine_list_issues: listIssues,

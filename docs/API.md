@@ -363,6 +363,8 @@ Makes a custom API request for advanced use cases.
 - `data` (object, optional): Request body for POST/PUT
 - `params` (object, optional): Query parameters for GET
 
+`path` must be a Redmine API relative path. Absolute URLs, protocol-relative URLs, parent directory segments, query strings, and hashes are rejected. Use `params` for query parameters.
+
 **Example:**
 ```json
 {

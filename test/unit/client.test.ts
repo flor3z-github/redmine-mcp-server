@@ -386,6 +386,27 @@ describe('RedmineClient', () => {
       );
       expect(result).toEqual(mockResponse.data);
     });
+
+    it('should encode wiki page path segments', async () => {
+      const mockResponse = {
+        data: {
+          wiki_page: {
+            title: 'A/B Page',
+            text: 'Encoded content',
+            version: 1,
+          },
+        },
+      };
+
+      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+      const result = await client.getWikiPage('test project', 'A/B Page');
+
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+        '/projects/test%20project/wiki/A%2FB%20Page.json'
+      );
+      expect(result).toEqual(mockResponse.data);
+    });
   });
 
   describe('updateJournal', () => {
@@ -544,6 +565,28 @@ describe('RedmineClient', () => {
         params: { param: 'value' },
       });
       expect(result).toEqual(mockResponse.data);
+    });
+
+    it.each([
+      'https://example.com/issues.json',
+      'http://example.com/issues.json',
+      '//example.com/issues.json',
+      '../issues.json',
+      '/projects/../issues.json',
+      '/issues.json?limit=1',
+      '/issues.json#section',
+    ])('should reject unsafe custom API path %s', async (path) => {
+      await expect(client.customRequest('GET', path)).rejects.toThrow(
+        'Path must be a Redmine API relative path'
+      );
+      expect(mockAxiosInstance.request).not.toHaveBeenCalled();
+    });
+
+    it('should reject unsupported custom API methods', async () => {
+      await expect(client.customRequest('PATCH', '/issues/1.json')).rejects.toThrow(
+        'Method must be one of GET, POST, PUT, DELETE'
+      );
+      expect(mockAxiosInstance.request).not.toHaveBeenCalled();
     });
   });
 

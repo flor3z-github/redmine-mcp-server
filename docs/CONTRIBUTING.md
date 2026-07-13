@@ -259,8 +259,8 @@ Maintainers will:
 1. Review and merge PRs
 2. Update version numbers
 3. Update CHANGELOG.md
-4. Create GitHub releases
-5. Publish to npm
+4. Publish to npm from the `main` branch release workflow
+5. Create GitHub releases manually only when needed
 
 ## Getting Help
 

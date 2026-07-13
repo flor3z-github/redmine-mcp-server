@@ -61,17 +61,17 @@ For production use, create a dedicated user with limited permissions:
 
 ```bash
 # Global installation
-npm install -g @your-org/mcp-server-redmine
+npm install -g @flor3z-github/mcp-server-redmine
 
 # Or use directly with npx (no installation needed)
-npx @your-org/mcp-server-redmine
+npx @flor3z-github/mcp-server-redmine
 ```
 
 ### Method 2: Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/redmine-mcp-server.git
+git clone https://github.com/flor3z-github/redmine-mcp-server.git
 cd redmine-mcp-server
 
 # Install dependencies
@@ -84,12 +84,20 @@ npm run build
 npm start
 ```
 
-### Method 3: Docker (Coming Soon)
+### Method 3: Local Docker Build
+
+No published Docker image is currently provided. Build the image from the repository root after cloning the project.
+The container runs the Streamable HTTP transport by default, so users authenticate with their Redmine API key through the browser flow.
 
 ```bash
+docker build -t redmine-mcp-server .
 docker run -e REDMINE_URL=https://your-redmine.com \
-           -e REDMINE_API_KEY=your-key \
-           your-org/redmine-mcp-server
+           -e MCP_HOST=0.0.0.0 \
+           -e MCP_PORT=3000 \
+           -e MCP_DATA_DIR=/data \
+           -p 3000:3000 \
+           -v redmine-mcp-data:/data \
+           redmine-mcp-server
 ```
 
 ## Client Configuration
@@ -108,7 +116,7 @@ Location of config file:
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@your-org/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -148,7 +156,7 @@ Location of config file:
   "cline.mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@your-org/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -170,7 +178,7 @@ Location of config file:
   "mcpServers": {
     "redmine": {
       "command": "npx",
-      "args": ["-y", "@your-org/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://your-redmine.com",
         "REDMINE_API_KEY": "your-api-key-here"
@@ -439,7 +447,7 @@ Configure multiple servers with different names:
   "mcpServers": {
     "redmine-prod": {
       "command": "npx",
-      "args": ["-y", "@your-org/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://prod.redmine.com",
         "REDMINE_API_KEY": "prod-key"
@@ -447,7 +455,7 @@ Configure multiple servers with different names:
     },
     "redmine-dev": {
       "command": "npx",
-      "args": ["-y", "@your-org/mcp-server-redmine"],
+      "args": ["-y", "@flor3z-github/mcp-server-redmine"],
       "env": {
         "REDMINE_URL": "https://dev.redmine.com",
         "REDMINE_API_KEY": "dev-key"
@@ -478,14 +486,27 @@ For slow networks or large instances:
 version: '3.8'
 services:
   redmine-mcp:
-    image: your-org/redmine-mcp-server
+    build: .
+    ports:
+      - "3000:3000"
     environment:
       - REDMINE_URL=https://your-redmine.com
-      - REDMINE_API_KEY=${REDMINE_API_KEY}
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=3000
+      - MCP_DATA_DIR=/data
+      # Set this when using an external HTTPS reverse proxy:
+      # - MCP_ISSUER_URL=https://mcp.your-domain.com
     volumes:
-      - ./ca-cert.pem:/certs/ca.pem:ro
-    env_file:
-      - .env
+      - mcp-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  mcp-data:
 ```
 
 ## Getting Help
@@ -495,7 +516,7 @@ services:
 1. **Documentation**
    - [API Documentation](./API.md)
    - [Contributing Guide](./CONTRIBUTING.md)
-   - [GitHub Issues](https://github.com/your-org/redmine-mcp-server/issues)
+   - [GitHub Issues](https://github.com/flor3z-github/redmine-mcp-server/issues)
 
 2. **Community**
    - Discord Server: [Join here]

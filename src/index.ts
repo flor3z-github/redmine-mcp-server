@@ -6,6 +6,7 @@ if (Buffer.prototype && !Buffer.prototype.subarray) {
 }
 
 import { runServer } from './server.js';
+import { SERVER_VERSION } from './version.js';
 
 // Enhanced error handling for DXT environment
 const logError = (context: string, error: unknown) => {
@@ -78,7 +79,7 @@ const validateEnvironment = (): boolean => {
 // Main execution
 const main = async () => {
   const timestamp = new Date().toISOString();
-  console.error(`[${timestamp}] [INFO] Starting Redmine MCP Server v1.0.0`);
+  console.error(`[${timestamp}] [INFO] Starting Redmine MCP Server v${SERVER_VERSION}`);
   console.error(`[${timestamp}] [DEBUG] Process ID: ${process.pid}`);
   
   // Validate environment

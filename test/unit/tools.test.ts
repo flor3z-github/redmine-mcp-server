@@ -185,6 +185,107 @@ describe('Issue Tools', () => {
         ['journals', 'attachments']
       );
     });
+
+    it('does not render comments by default, but shows the count', async () => {
+      const mockIssue = {
+        issue: {
+          id: 200,
+          subject: 'Has comments',
+          project: { name: 'P' },
+          status: { name: 'New' },
+          priority: { name: 'Normal' },
+          author: { name: 'U' },
+          done_ratio: 0,
+          journals: [
+            { id: 1, user: { id: 1, name: 'A' }, notes: 'first', created_on: '2026-07-01T00:00:00Z', private_notes: false },
+            { id: 2, user: { id: 2, name: 'B' }, notes: 'second', created_on: '2026-07-02T00:00:00Z', private_notes: false },
+          ],
+        },
+      };
+      vi.mocked(redmineClient.getIssue).mockResolvedValue(mockIssue);
+
+      const result = await getIssue({ id: 200 });
+
+      expect(result.content[0].text).toContain('Comments: 2 total (not shown');
+      expect(result.content[0].text).not.toContain('first');
+      expect(result.content[0].text).not.toContain('second');
+    });
+
+    it('renders comments when include_journals is true', async () => {
+      const mockIssue = {
+        issue: {
+          id: 201, subject: 'S', project: { name: 'P' }, status: { name: 'New' },
+          priority: { name: 'Normal' }, author: { name: 'U' }, done_ratio: 0,
+          journals: [
+            { id: 1, user: { id: 1, name: 'A' }, notes: 'older', created_on: '2026-07-01T00:00:00Z', private_notes: false },
+            { id: 2, user: { id: 2, name: 'B' }, notes: 'newer', created_on: '2026-07-02T00:00:00Z', private_notes: false },
+          ],
+        },
+      };
+      vi.mocked(redmineClient.getIssue).mockResolvedValue(mockIssue);
+
+      const result = await getIssue({ id: 201, include_journals: true });
+
+      expect(result.content[0].text).toContain('showing 0-1, newest first');
+      expect(result.content[0].text).toContain('newer');
+      expect(result.content[0].text).toContain('older');
+    });
+
+    it('truncates description when description_max_chars is set', async () => {
+      const mockIssue = {
+        issue: {
+          id: 202, subject: 'S', project: { name: 'P' }, status: { name: 'New' },
+          priority: { name: 'Normal' }, author: { name: 'U' }, done_ratio: 0,
+          description: 'Z'.repeat(1000),
+        },
+      };
+      vi.mocked(redmineClient.getIssue).mockResolvedValue(mockIssue);
+
+      const result = await getIssue({ id: 202, description_max_chars: 50 });
+
+      expect(result.content[0].text).toContain('...');
+      expect(result.content[0].text).not.toContain('Z'.repeat(200));
+    });
+
+    it('bridges include:[journals] to render comments', async () => {
+      const mockIssue = {
+        issue: {
+          id: 203, subject: 'S', project: { name: 'P' }, status: { name: 'New' },
+          priority: { name: 'Normal' }, author: { name: 'U' }, done_ratio: 0,
+          journals: [
+            { id: 1, user: { id: 1, name: 'A' }, notes: 'bridged', created_on: '2026-07-01T00:00:00Z', private_notes: false },
+          ],
+        },
+      };
+      vi.mocked(redmineClient.getIssue).mockResolvedValue(mockIssue);
+
+      const result = await getIssue({ id: 203, include: ['journals'] });
+
+      expect(result.content[0].text).toContain('bridged');
+    });
+
+    it('lets explicit include_journals=false override the include bridge', async () => {
+      const mockIssue = {
+        issue: {
+          id: 204, subject: 'S', project: { name: 'P' }, status: { name: 'New' },
+          priority: { name: 'Normal' }, author: { name: 'U' }, done_ratio: 0,
+          journals: [
+            { id: 1, user: { id: 1, name: 'A' }, notes: 'hidden', created_on: '2026-07-01T00:00:00Z', private_notes: false },
+          ],
+        },
+      };
+      vi.mocked(redmineClient.getIssue).mockResolvedValue(mockIssue);
+
+      const result = await getIssue({ id: 204, include: ['journals'], include_journals: false });
+
+      expect(result.content[0].text).not.toContain('hidden');
+      expect(result.content[0].text).toContain('not shown');
+    });
+
+    it('returns an error response when a param is out of range', async () => {
+      const result = await getIssue({ id: 205, journals_limit: 999 });
+      expect(result.isError).toBe(true);
+    });
   });
 
   describe('createIssue', () => {

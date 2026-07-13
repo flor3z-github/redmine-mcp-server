@@ -2,12 +2,13 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { redmineClient } from '../client/index.js';
 import { formatIssue, formatList, truncateText } from '../utils/formatters.js';
 import { formatErrorResponse } from '../utils/errors.js';
-import { 
-  validateInput, 
+import {
+  validateInput,
   parseId,
   createIssueSchema,
   updateIssueSchema,
-  issueQuerySchema 
+  issueQuerySchema,
+  getIssueSchema,
 } from '../utils/validators.js';
 import type { RedmineIssue } from '../client/types.js';
 import type { z } from 'zod';
@@ -104,47 +105,82 @@ export async function listIssues(input: unknown) {
 // Get issue tool
 export const getIssueTool: Tool = {
   name: 'redmine_get_issue',
-  description: 'Get detailed information about a specific issue',
+  description:
+    'Get a specific issue. Comments (journals) are OFF by default to save tokens; ' +
+    'the total count is always shown. Enable and page through comments with the journals_* params.',
   inputSchema: {
     type: 'object',
     properties: {
-      id: { 
-        type: 'number', 
-        description: 'Issue ID' 
+      id: {
+        type: 'number',
+        description: 'Issue ID',
+      },
+      include_journals: {
+        type: 'boolean',
+        description: 'Return comment bodies (default false). When false, only the total count is shown.',
+      },
+      journals_limit: {
+        type: 'number',
+        description: 'Max comments to return when include_journals=true (1-100, default 10)',
+      },
+      journals_offset: {
+        type: 'number',
+        description: 'Comment start index for paging (default 0; with desc order, 0 = newest)',
+      },
+      journals_order: {
+        type: 'string',
+        description: '"desc" (newest first, default) or "asc" (oldest first)',
+      },
+      description_max_chars: {
+        type: 'number',
+        description: 'Truncate the description to this many chars. Omit or 0 = full text.',
+      },
+      journal_notes_max_chars: {
+        type: 'number',
+        description: 'Truncate each comment to this many chars (default 500). 0 = full text.',
       },
       include: {
         type: 'array',
         items: { type: 'string' },
-        description: 'Additional data to include: journals, watchers, relations, children, attachments, changesets'
-      }
+        description:
+          'Extra data besides journals: watchers, relations, children, attachments, changesets. ' +
+          "Passing 'journals' here also turns comments on unless include_journals is explicitly set.",
+      },
     },
-    required: ['id']
-  }
+    required: ['id'],
+  },
 };
+
+function buildInclude(userInclude?: string[]): { include: string[]; journalsRequested: boolean } {
+  const requested = userInclude ?? [];
+  const journalsRequested = requested.includes('journals');
+  const others = requested.filter((v) => v !== 'journals');
+  return { include: ['journals', ...others], journalsRequested };
+}
 
 export async function getIssue(input: unknown) {
   try {
-    const { id, include: inputInclude } = input as { id: number; include?: string[] };
-    const issueId = parseId(id);
+    const params = validateInput(getIssueSchema, input);
+    const { include, journalsRequested } = buildInclude(params.include);
+    const includeJournals = params.include_journals ?? journalsRequested;
 
-    // journals가 포함되어 있지 않으면 추가
-    let include = inputInclude;
-    if (!include) {
-      include = ['journals'];
-    } else if (!include.includes('journals')) {
-      include = [...include, 'journals'];
-    }
+    const response = await redmineClient.getIssue(params.id, include);
+    const content = formatIssue(response.issue, {
+      descriptionMaxChars: params.description_max_chars,
+      includeJournals,
+      journalsLimit: params.journals_limit,
+      journalsOffset: params.journals_offset,
+      journalsOrder: params.journals_order,
+      journalNotesMaxChars: params.journal_notes_max_chars,
+    });
 
-    const response = await redmineClient.getIssue(issueId, include);
-    const content = formatIssue(response.issue);
-    
     return {
-      content: [{ type: 'text', text: content }]
+      content: [{ type: 'text', text: content }],
     };
   } catch (error) {
     return {
       content: [{ type: 'text', text: formatErrorResponse(error) }],
-      isError: true
+      isError: true,
     };
   }
 }

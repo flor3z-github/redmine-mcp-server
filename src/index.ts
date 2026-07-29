@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-// Buffer compatibility polyfill for Node.js environments
-if (Buffer.prototype && !Buffer.prototype.subarray) {
-  Buffer.prototype.subarray = Buffer.prototype.slice;
-}
-
 import { runServer } from './server.js';
 import { SERVER_VERSION } from './version.js';
 

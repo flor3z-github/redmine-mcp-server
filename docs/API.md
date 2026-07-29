@@ -46,19 +46,20 @@ Gets detailed information about a specific issue.
 
 **Parameters:**
 - `id` (number, required): Issue ID
-- `include` (array, optional): Additional data to include
-  - `"journals"`: Issue history and comments
-  - `"watchers"`: Users watching the issue
-  - `"relations"`: Related issues
-  - `"children"`: Sub-tasks
-  - `"attachments"`: File attachments
-  - `"changesets"`: Associated commits
+- `include_journals` (boolean, default `false`) — return comment bodies. When false, only the comment count is shown.
+- `journals_limit` (number, 1–100, default 10), `journals_offset` (number, default 0), `journals_order` (`"desc"` default = newest first | `"asc"` = oldest first)
+- `description_max_chars` (number, `0`/omit = full), `journal_notes_max_chars` (number, default 500, `0` = full)
+- `include` (string[]) — `watchers`, `relations`, `children`, `attachments`, `changesets`. Listing `journals` here also enables comments unless `include_journals` is set.
+
+> **Breaking change:** comments are no longer returned by default. Pass `include_journals=true` (or `include: ["journals"]`).
 
 **Example:**
 ```json
 {
   "id": 123,
-  "include": ["journals", "attachments"]
+  "include_journals": true,
+  "journals_limit": 20,
+  "include": ["attachments"]
 }
 ```
 

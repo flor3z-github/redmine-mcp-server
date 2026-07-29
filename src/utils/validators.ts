@@ -64,6 +64,18 @@ export const issueQuerySchema = z.object({
   limit: z.number().int().min(1).max(100).optional(),
 });
 
+// Get-issue validator (comment pagination + truncation controls)
+export const getIssueSchema = z.object({
+  id: positiveIntegerSchema,
+  include_journals: z.boolean().optional(), // no default: preserves explicit false for bridge precedence
+  journals_limit: z.number().int().min(1).max(100).optional().default(10),
+  journals_offset: z.number().int().min(0).optional().default(0),
+  journals_order: z.enum(['asc', 'desc']).optional().default('desc'),
+  description_max_chars: z.number().int().min(0).optional(),
+  journal_notes_max_chars: z.number().int().min(0).optional().default(500),
+  include: z.array(z.string()).optional(),
+});
+
 // Time entry validators
 const baseTimeEntrySchema = z.object({
   issue_id: positiveIntegerSchema.optional(),

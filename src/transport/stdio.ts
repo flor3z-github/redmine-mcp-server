@@ -24,8 +24,9 @@ export async function startStdioTransport(server: Server): Promise<void> {
   // Keep process alive by maintaining event loop activity
   const keepAlive = globalThis.setInterval(() => {}, 1000000);
 
-  // Keep the process alive and handle stdin properly for MCP
-  process.stdin.setEncoding('utf8');
+  // Keep the process alive and handle stdin properly for MCP.
+  // Do NOT call setEncoding() here: it makes stdin emit strings, and the SDK's
+  // ReadBuffer requires Buffer chunks (it calls Buffer#subarray while framing).
   process.stdin.resume();
 
   // Handle stdin closure (when client disconnects)

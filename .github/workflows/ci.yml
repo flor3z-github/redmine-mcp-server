@@ -69,10 +69,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
+    # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0.
+    # Node 22 still bundles npm 10.9.x, so 24.x is the lowest line that qualifies.
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '20.x'
+        node-version: '24.x'
         registry-url: 'https://registry.npmjs.org'
         cache: 'npm'
 
@@ -101,11 +103,11 @@ jobs:
           echo "changed=false" >> $GITHUB_OUTPUT
         fi
 
+    # Authenticated by the npm trusted publisher (OIDC) via id-token: write.
+    # No token secret needed, and provenance is attached automatically.
     - name: Publish beta to npm
       if: steps.version-check.outputs.changed == 'true'
-      run: npm publish --access public --tag beta --provenance
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npm publish --access public --tag beta
 
   publish:
     needs: test
@@ -120,10 +122,12 @@ jobs:
       with:
         fetch-depth: 0
 
+    # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0.
+    # Node 22 still bundles npm 10.9.x, so 24.x is the lowest line that qualifies.
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '20.x'
+        node-version: '24.x'
         registry-url: 'https://registry.npmjs.org'
         cache: 'npm'
 
@@ -148,8 +152,8 @@ jobs:
           echo "changed=false" >> $GITHUB_OUTPUT
         fi
 
+    # Authenticated by the npm trusted publisher (OIDC) via id-token: write.
+    # No token secret needed, and provenance is attached automatically.
     - name: Publish to npm with provenance
       if: steps.version-check.outputs.changed == 'true'
-      run: npm publish --access public --provenance
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npm publish --access public
